@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>WhatsApp Fixer</title>
+  <style>
+    body{background:#0d1117;color:#e6edf3;font-family:Inter,system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:#161b22;padding:24px;border-radius:12px;max-width:420px;width:100%}
+    input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:none;background:#0d1117;outline:1px solid #30363d;color:#e6edf3}
+    button{background:#25d366;color:#071018;border:none;padding:10px;border-radius:8px;width:100%;cursor:pointer}
+    .small{font-size:0.9rem;color:#8b949e}
+    .msg{margin-top:8px;font-size:0.95rem}
+  </style>
+</head>
+<body>
+  <script>
+    if (localStorage.getItem("loggedIn") !== "true") {
+      window.location.href = "/login.html";
+    }
+  </script>
+
+  <div class="card">
+    <h2 style="color:#25d366">WhatsApp Fixer</h2>
+    <p class="small">Kirim permintaan pemulihan akun langsung ke WhatsApp Support.</p>
+
+    <form id="fixForm">
+      <input id="number" placeholder="Nomor WhatsApp (+62...)" required />
+      <button type="submit">🍁 Send to Support</button>
+    </form>
+
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button id="gotoAdmin" style="flex:1;background:#2b6cff">Admin Panel</button>
+      <button id="logout" style="flex:1;background:#ff5555">Logout</button>
+    </div>
+
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script>
+    document.getElementById("gotoAdmin").addEventListener("click", ()=> {
+      const role = localStorage.getItem("role");
+      if (role !== "admin") {
+        alert("Access denied — admin only");
+        return;
+      }
+      window.location.href = "/admin.html";
+    });
+
+    document.getElementById("logout").addEventListener("click", ()=> {
+      localStorage.removeItem("loggedIn");
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      window.location.href = "/login.html";
+    });
+
+    const form = document.getElementById("fixForm");
+    const msg = document.getElementById("msg");
+    form.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      msg.textContent = "⏳ Mengirim...";
+      const token = localStorage.getItem("token");
+      const data = { number: document.getElementById("number").value.trim() };
+      try {
+        const res = await fetch("/api/sendmail", {
+          method: "POST",
+          headers: { "Content-Type":"application/json", "Authorization":"Bearer "+token },
+          body: JSON.stringify(data)
+        });
+        const j = await res.json();
+        msg.textContent = j.message;
+        msg.style.color = j.success ? "#25d366" : "#ff5555";
+      } catch (err) {
+        msg.textContent = "❌ Terjadi kesalahan koneksi.";
+        msg.style.color = "#ff5555";
+      }
+    });
+  </script>
+</body>
+</html>
