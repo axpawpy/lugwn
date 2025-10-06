@@ -4,7 +4,7 @@
  * IMPORTANT: Replace CONFIG placeholders with your GitHub repo/token and a SIGNING_SECRET.
  */
 const crypto = require('crypto');
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const CONFIG = {
   GITHUB_OWNER: "axpawpy",
