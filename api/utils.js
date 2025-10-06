@@ -11,7 +11,7 @@ const CONFIG = {
   GITHUB_REPO: "pandahpeler",
   GITHUB_PATH: "users.json",
   GITHUB_BRANCH: "main",
-  GITHUB_TOKEN: "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",
+  GITHUB_TOKEN: "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",
   SIGNING_SECRET: "axpawbackbrow"
 };
 
