@@ -1,0 +1,13 @@
+{
+  "name": "whatsapp-fixer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node api/sendmail.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.8",
+    "node-fetch": "^3.3.2"
+  }
+}
