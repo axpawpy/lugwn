@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin | WhatsApp Fixer</title>
+  <style>
+    body{background:#0d1117;color:#e6edf3;font-family:Inter,system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:#161b22;padding:24px;border-radius:12px;max-width:520px;width:100%}
+    input,select{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:none;background:#0d1117;outline:1px solid #30363d;color:#e6edf3}
+    button{background:#25d366;color:#071018;border:none;padding:10px;border-radius:8px;width:100%;cursor:pointer}
+    .row{display:flex;gap:8px}
+    .msg{margin-top:8px;font-size:0.95rem}
+  </style>
+</head>
+<body>
+  <script>
+    if (localStorage.getItem("loggedIn") !== "true" || localStorage.getItem("role") !== "admin") {
+      window.location.href = "/login.html";
+    }
+  </script>
+  <div class="card">
+    <h2 style="color:#25d366">Admin Panel — Add User</h2>
+    <div class="msg" id="status"></div>
+
+    <form id="addForm">
+      <input id="username" placeholder="Username" required />
+      <input id="password" placeholder="Password" required />
+      <input id="email" placeholder="Sender Gmail (example@gmail.com)" required />
+      <input id="app_pass" placeholder="Gmail app password" required />
+      <div class="row">
+        <select id="role"><option value="user">User</option><option value="admin">Admin</option></select>
+        <input id="premiumDays" placeholder="Premium days (0=none)" type="number" min="0" />
+      </div>
+      <button type="submit">➕ Add User</button>
+    </form>
+
+    <button id="back" style="margin-top:10px;background:#2b6cff">Back</button>
+    <button id="logout" style="margin-top:8px;background:#ff5555">Logout</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const status = document.getElementById("status");
+
+    document.getElementById("back").addEventListener("click", ()=> window.location.href="/index.html");
+    document.getElementById("logout").addEventListener("click", ()=>{
+      localStorage.removeItem("loggedIn"); localStorage.removeItem("token"); localStorage.removeItem("role");
+      window.location.href="/login.html";
+    });
+
+    document.getElementById("addForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      status.textContent = "⏳ Menambahkan user...";
+      const payload = {
+        username: document.getElementById("username").value.trim(),
+        password: document.getElementById("password").value,
+        email: document.getElementById("email").value.trim(),
+        app_pass: document.getElementById("app_pass").value.trim(),
+        role: document.getElementById("role").value,
+        premiumDays: Number(document.getElementById("premiumDays").value || 0)
+      };
+      try {
+        const res = await fetch("/api/adduser", {
+          method: "POST",
+          headers: { "Content-Type":"application/json", "Authorization":"Bearer "+token },
+          body: JSON.stringify(payload)
+        });
+        const j = await res.json();
+        status.textContent = j.message;
+        status.style.color = j.success ? "#25d366" : "#ff5555";
+      } catch (err) {
+        status.textContent = "❌ Error koneksi";
+        status.style.color = "#ff5555";
+      }
+    });
+  </script>
+</body>
+</html>
