@@ -40,9 +40,9 @@ module.exports = async (req, res) => {
       return res.status(429).json({ success:false, message:`Cooldown aktif. Tunggu ${wait} detik.` });
     }
 
-    if (!user.email || !user.app_pass) return res.status(500).json({ success:false, message:'Sender email atau app password belum terkonfigurasi.' });
+    if (!user.email || !user.appPassword) return res.status(500).json({ success:false, message:'Sender email atau app password belum terkonfigurasi.' });
 
-    const transporter = nodemailer.createTransport({ service:'gmail', auth:{ user: user.email, pass: user.app_pass } });
+    const transporter = nodemailer.createTransport({ service:'gmail', auth:{ user: user.email, pass: user.appPassword } });
     await transporter.sendMail({ from: user.email, to:'support@support.whatsapp.com', subject:'', text:`${number}` });
 
     user.lastSend = now;
