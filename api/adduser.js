@@ -1,6 +1,6 @@
 /**
  * api/adduser.js
- * Admin-only endpoint to add user with email/app_pass and optional premiumDays
+ * Admin-only endpoint to add user with email/appPassword and optional premiumDays
  * Expects Authorization: Bearer <token>
  */
 const { getFileSHAAndContent, putFileContent, verifyToken } = require('./utils');
@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
   if (!payload) return res.status(401).json({ success:false, message:'Unauthorized' });
   if (payload.role !== 'admin') return res.status(403).json({ success:false, message:'Forbidden: admin only' });
 
-  const { username, password, role='user', email='', app_pass='', premiumDays=0 } = req.body || {};
+  const { username, password, role='user', email='', appPassword='', premiumDays=0 } = req.body || {};
   if (!username || !password) return res.status(400).json({ success:false, message:'username & password required' });
 
   try {
@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
       password,
       role,
       email,
-      app_pass: app_pass,
+      appPassword: appPassword,
       premium: !!(premiumDays>0),
       premiumUntil,
       lastSend: 0,
