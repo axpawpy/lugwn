@@ -5,12 +5,123 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin | WhatsApp Fixer</title>
   <style>
-    body{background:#0d1117;color:#e6edf3;font-family:Inter,system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .card{background:#161b22;padding:24px;border-radius:12px;max-width:520px;width:100%}
-    input,select{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:none;background:#0d1117;outline:1px solid #30363d;color:#e6edf3}
-    button{background:#25d366;color:#071018;border:none;padding:10px;border-radius:8px;width:100%;cursor:pointer}
-    .row{display:flex;gap:8px}
-    .msg{margin-top:8px;font-size:0.95rem}
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #13002b, #000);
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #eae2ff;
+      overflow: hidden;
+    }
+
+    canvas#bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(30, 0, 60, 0.45);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(150, 0, 255, 0.4);
+      box-shadow: 0 0 25px rgba(150, 0, 255, 0.4);
+      padding: 32px;
+      border-radius: 16px;
+      max-width: 520px;
+      width: 100%;
+      animation: fadeIn 1s ease;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      text-align: center;
+      color: #c084fc;
+      text-shadow: 0 0 10px #a855f7;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid rgba(160, 90, 255, 0.3);
+      background: rgba(0, 0, 0, 0.4);
+      color: #eae2ff;
+      outline: none;
+      transition: 0.3s;
+      font-size: 0.95rem;
+    }
+
+    input:focus, select:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 8px #9333ea;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+    }
+
+    button#addUser {
+      background: linear-gradient(90deg, #7e22ce, #a855f7);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+    }
+
+    button#addUser:hover {
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
+    }
+
+    button#back {
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+    }
+
+    button#back:hover {
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.8);
+    }
+
+    button#logout {
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+    }
+
+    button#logout:hover {
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .msg {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -19,8 +130,11 @@
       window.location.href = "/login.html";
     }
   </script>
+
+  <canvas id="bg"></canvas>
+
   <div class="card">
-    <h2 style="color:#25d366">Admin Panel — Add User</h2>
+    <h2>Admin Panel — Add User</h2>
     <div class="msg" id="status"></div>
 
     <form id="addForm">
@@ -29,14 +143,17 @@
       <input id="email" placeholder="Sender Gmail (example@gmail.com)" required />
       <input id="app_pass" placeholder="Gmail app password" required />
       <div class="row">
-        <select id="role"><option value="user">User</option><option value="admin">Admin</option></select>
+        <select id="role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
         <input id="premiumDays" placeholder="Premium days (0=none)" type="number" min="0" />
       </div>
-      <button type="submit">➕ Add User</button>
+      <button id="addUser" type="submit">➕ Add User</button>
     </form>
 
-    <button id="back" style="margin-top:10px;background:#2b6cff">Back</button>
-    <button id="logout" style="margin-top:8px;background:#ff5555">Logout</button>
+    <button id="back">⬅️ Back</button>
+    <button id="logout">🚪 Logout</button>
   </div>
 
   <script>
@@ -45,7 +162,9 @@
 
     document.getElementById("back").addEventListener("click", ()=> window.location.href="/index.html");
     document.getElementById("logout").addEventListener("click", ()=>{
-      localStorage.removeItem("loggedIn"); localStorage.removeItem("token"); localStorage.removeItem("role");
+      localStorage.removeItem("loggedIn"); 
+      localStorage.removeItem("token"); 
+      localStorage.removeItem("role");
       window.location.href="/login.html";
     });
 
@@ -68,12 +187,46 @@
         });
         const j = await res.json();
         status.textContent = j.message;
-        status.style.color = j.success ? "#25d366" : "#ff5555";
+        status.style.color = j.success ? "#4ade80" : "#f87171";
       } catch (err) {
         status.textContent = "❌ Error koneksi";
-        status.style.color = "#ff5555";
+        status.style.color = "#f87171";
       }
     });
+
+    // 🌌 Background particle animation
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const particles = Array.from({length: 70}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6
+    }));
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(160,90,255,0.8)';
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
   </script>
 </body>
 </html>
