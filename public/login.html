@@ -5,16 +5,105 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Login | WhatsApp Fixer</title>
   <style>
-    body{background:#0d1117;color:#e6edf3;font-family:Inter,system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .card{background:#161b22;padding:24px;border-radius:12px;max-width:420px;width:100%}
-    input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:none;background:#0d1117;outline:1px solid #30363d;color:#e6edf3}
-    button{background:#25d366;color:#071018;border:none;padding:10px;border-radius:8px;width:100%;cursor:pointer}
-    .msg{margin-top:8px;font-size:0.95rem}
+    /* 🌌 Body & background */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #13002b, #000);
+      overflow: hidden;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #eae2ff;
+    }
+
+    /* 🔮 Particle background canvas */
+    canvas#bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* 💎 Card */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(30, 0, 60, 0.45);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(150, 0, 255, 0.4);
+      box-shadow: 0 0 25px rgba(150, 0, 255, 0.4);
+      padding: 30px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      color: #c084fc;
+      text-shadow: 0 0 10px #a855f7;
+    }
+
+    input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(160, 90, 255, 0.3);
+      background: rgba(0, 0, 0, 0.4);
+      color: #eae2ff;
+      outline: none;
+      transition: 0.3s;
+      font-size: 0.95rem;
+    }
+
+    input:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 8px #9333ea;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      background: linear-gradient(90deg, #7e22ce, #a855f7);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
+    }
+
+    .msg {
+      margin-top: 12px;
+      font-size: 0.95rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
   </style>
 </head>
 <body>
+  <!-- 🔮 Particle background -->
+  <canvas id="bg"></canvas>
+
+  <!-- 💜 Login Card -->
   <div class="card">
-    <h2 style="color:#25d366">WhatsApp Fixer — Login</h2>
+    <h2>WhatsApp Fixer — Login</h2>
     <form id="loginForm">
       <input id="username" placeholder="Username" required />
       <input id="password" placeholder="Password" type="password" required />
@@ -24,33 +113,78 @@
   </div>
 
   <script>
+    // 🧠 Auth Logic
     const form = document.getElementById("loginForm");
     const msg = document.getElementById("msg");
+
     if (localStorage.getItem("loggedIn") === "true") {
       window.location.href = "/index.html";
     }
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       msg.textContent = "⏳ Memeriksa...";
-      const data = { username: document.getElementById("username").value, password: document.getElementById("password").value };
+      const data = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+      };
       try {
-        const res = await fetch("/api/login", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(data) });
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(data)
+        });
         const j = await res.json();
         if (j.success) {
           localStorage.setItem("loggedIn","true");
           localStorage.setItem("token", j.token);
           localStorage.setItem("role", j.role || "user");
+          msg.style.color = "#4ade80";
           msg.textContent = "✅ Login berhasil!";
           setTimeout(()=> window.location.href = "/index.html", 700);
         } else {
+          msg.style.color = "#f87171";
           msg.textContent = "❌ " + j.message;
-          msg.style.color = "#ff5555";
         }
       } catch (err) {
+        msg.style.color = "#f87171";
         msg.textContent = "❌ Terjadi kesalahan koneksi.";
-        msg.style.color = "#ff5555";
       }
     });
+
+    // 🌌 Simple Particle Animation
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const particles = Array.from({length: 60}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6
+    }));
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(160,90,255,0.8)';
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
   </script>
 </body>
 </html>
