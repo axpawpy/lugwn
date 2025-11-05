@@ -1,80 +1,501 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>WhatsApp Fixer</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WhatsApp Fixer — Neon Purple UI</title>
   <style>
-    body{background:#0d1117;color:#e6edf3;font-family:Inter,system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .card{background:#161b22;padding:24px;border-radius:12px;max-width:420px;width:100%}
-    input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:none;background:#0d1117;outline:1px solid #30363d;color:#e6edf3}
-    button{background:#25d366;color:#071018;border:none;padding:10px;border-radius:8px;width:100%;cursor:pointer}
-    .small{font-size:0.9rem;color:#8b949e}
-    .msg{margin-top:8px;font-size:0.95rem}
+    /* ---------- Reset & base ---------- */
+    * { box-sizing: border-box; }
+    html,body { height:100%; }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: #060308;
+      color: #efe8ff;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* ---------- Canvas background overlay ---------- */
+    #bg-canvas{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:0;
+      display:block;
+    }
+
+    /* subtle vignette and gradient layer */
+    .bg-overlay {
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      background:
+        radial-gradient(1200px 600px at 10% 20%, rgba(136, 71, 255, 0.08), transparent 10%),
+        radial-gradient(900px 500px at 85% 80%, rgba(105, 60, 180, 0.07), transparent 8%),
+        linear-gradient(180deg, rgba(5,3,10,0.6), rgba(3,2,6,0.8) 60%);
+      backdrop-filter: none;
+      mix-blend-mode: screen;
+    }
+
+    /* ---------- Main container (centers card) ---------- */
+    .wrap {
+      position: relative;
+      z-index: 2; /* above canvas */
+      width: 100%;
+      max-width: 460px;
+      padding: 28px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height: 80vh;
+      pointer-events: auto;
+    }
+
+    /* ---------- Card (glass + neon) ---------- */
+    .card {
+      width:100%;
+      border-radius: 18px;
+      padding: 28px;
+      background: linear-gradient(180deg, rgba(30,6,45,0.45), rgba(12,3,28,0.35));
+      border: 1px solid rgba(200,150,255,0.07);
+      box-shadow:
+        0 18px 50px rgba(10,4,30,0.7),
+        0 0 40px rgba(138, 85, 255, 0.08),
+        0 0 18px rgba(81, 33, 147, 0.06) inset;
+      backdrop-filter: blur(12px) saturate(1.1);
+      transform: translateY(-6px);
+      position: relative;
+      overflow: visible;
+      transition: transform .18s ease;
+      border-left: 2px solid rgba(160,110,255,0.06);
+      border-right: 2px solid rgba(100,60,200,0.03);
+    }
+    .card:hover { transform: translateY(-10px) scale(1.005); }
+
+    /* outer neon stroke glow */
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-8px;
+      border-radius:22px;
+      pointer-events:none;
+      background: linear-gradient(90deg, rgba(147,51,234,0.16), rgba(168,85,247,0.12));
+      filter: blur(18px);
+      z-index:-1;
+    }
+
+    /* ---------- Header avatar + title ---------- */
+    .top {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      margin-bottom:6px;
+    }
+    .avatar {
+      width:92px;
+      height:92px;
+      border-radius:50%;
+      overflow:hidden;
+      display:inline-grid;
+      place-items:center;
+      border: 3px solid rgba(200,160,255,0.18);
+      box-shadow: 0 8px 30px rgba(138,85,255,0.12), 0 0 20px rgba(147,51,234,0.08);
+      background: radial-gradient(circle at 30% 20%, rgba(180,140,255,0.12), rgba(100,50,200,0.06));
+    }
+    .avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+    h2 {
+      margin:0;
+      color: #d4b8ff;
+      font-size:1.4rem;
+      letter-spacing:0.2px;
+      text-shadow: 0 2px 18px rgba(140, 86, 255, 0.12);
+    }
+    .status {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      color:#bfe0c9;
+      font-size:0.85rem;
+      margin-bottom:6px;
+    }
+    .dot {
+      width:10px; height:10px; border-radius:50%;
+      background: linear-gradient(180deg,#39d353,#18b14f);
+      box-shadow: 0 0 10px rgba(57,211,83,0.35);
+    }
+
+    /* ---------- Form ---------- */
+    form { margin-top:6px; display:flex; flex-direction:column; gap:12px; }
+    .input {
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    input[type="text"] {
+      flex:1;
+      padding:12px 14px;
+      border-radius:10px;
+      border: 1px solid rgba(180,140,255,0.12);
+      background: rgba(12,6,22,0.45);
+      color: #efe8ff;
+      font-size:0.98rem;
+      outline:none;
+      box-shadow: inset 0 -2px 14px rgba(0,0,0,0.35);
+    }
+    input[type="text"]::placeholder { color: #b99fe8; opacity:0.7; }
+    input[type="text"]:focus {
+      border-color: rgba(200,150,255,0.6);
+      box-shadow: 0 6px 20px rgba(150,80,240,0.08), 0 0 12px rgba(200,150,255,0.05) inset;
+    }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:600;
+      cursor:pointer;
+      user-select:none;
+      transition: all .14s ease;
+      border:1px solid rgba(150,90,240,0.14);
+      background: linear-gradient(180deg, rgba(110, 42, 190, 0.18), rgba(70, 20, 110, 0.06));
+      color: #eae2ff;
+      box-shadow: 0 6px 16px rgba(40,5,55,0.5);
+    }
+    .btn:active { transform: translateY(1px); }
+
+    .btn-main {
+      width:100%;
+      margin-top:6px;
+      background: linear-gradient(90deg,#7c3aed,#a855f7);
+      color:#fff;
+      border: 1px solid rgba(180,120,255,0.28);
+      box-shadow: 0 10px 30px rgba(124,58,237,0.16);
+      padding:12px;
+    }
+    .btn-main:hover {
+      box-shadow: 0 18px 50px rgba(138,85,255,0.22), 0 0 30px rgba(124,58,237,0.12);
+      transform: translateY(-3px);
+    }
+
+    .btn-outline {
+      padding:10px 12px;
+      background:transparent;
+      border:1px solid rgba(150,90,240,0.25);
+      color:#d9c9ff;
+      display:inline-flex;
+      gap:10px;
+      border-radius:10px;
+      box-shadow: 0 6px 18px rgba(10,4,20,0.5);
+    }
+    .btn-outline:hover {
+      box-shadow: 0 12px 30px rgba(120,50,220,0.12);
+      transform: translateY(-2px);
+    }
+
+    .action-row { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+
+    /* button grid (as in sample) */
+    .grid {
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:10px;
+    }
+    .neon-btn {
+      padding:12px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(40,8,70,0.45), rgba(20,6,50,0.25));
+      border:1px solid rgba(160,120,255,0.08);
+      box-shadow: 0 8px 20px rgba(20,6,60,0.6), 0 0 14px rgba(140,80,255,0.06);
+      color:#e8dfff;
+      font-weight:700;
+      text-transform:uppercase;
+      font-size:0.82rem;
+    }
+    .neon-btn-outline {
+      border:1px solid rgba(160,110,255,0.34);
+      box-shadow: 0 4px 18px rgba(160,110,255,0.08);
+    }
+
+    /* ---------- message ---------- */
+    .msg {
+      margin-top:12px;
+      font-size:0.95rem;
+      text-align:center;
+      min-height:1.1em;
+      color:#e7d9ff;
+    }
+
+    /* ---------- footer small info ---------- */
+    .meta {
+      margin-top:14px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      color:#cdb9ff;
+      font-size:0.82rem;
+      opacity:0.9;
+    }
+    .meta .pill {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:10px;
+      background: rgba(12,6,28,0.4);
+      border:1px solid rgba(160,120,255,0.06);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width:520px){
+      .wrap { padding:16px; min-height:86vh; }
+      .card { padding:18px; border-radius:14px; }
+      .avatar { width:78px; height:78px; }
+      h2 { font-size:1.2rem; }
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
   </style>
 </head>
 <body>
-  <script>
-    if (localStorage.getItem("loggedIn") !== "true") {
-      window.location.href = "/login.html";
-    }
-  </script>
+  <!-- animated background canvas -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="bg-overlay" aria-hidden="true"></div>
 
-  <div class="card">
-    <h2 style="color:#25d366">WhatsApp Fixer</h2>
-    <p class="small">Kirim permintaan pemulihan akun langsung ke WhatsApp Support.</p>
+  <div class="wrap" role="main" aria-labelledby="title">
+    <div class="card" role="region" aria-label="WhatsApp Fixer panel">
+      <div class="top" id="title">
+        <div class="avatar" aria-hidden="true">
+          <!-- placeholder avatar, ganti src sesuai keperluan -->
+          <img src="https://files.catbox.moe/jhn2j1.jpg" alt="avatar" />
+        </div>
+        <h2>Welcome, in web fixmerah whatsupp</h2>
+        <div class="status"><span class="dot" aria-hidden="true"></span><span>ONLINE</span></div>
+      </div>
 
-    <form id="fixForm">
-      <input id="number" placeholder="Nomor WhatsApp (+62...)" required />
-      <button type="submit">🍁 Send to Support</button>
-    </form>
+      <form id="fixForm" autocomplete="off" novalidate>
+        <div class="input">
+          <input id="number" name="number" type="text" inputmode="tel" placeholder="input number. example: +62xxxx" required />
+        </div>
 
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button id="gotoAdmin" style="flex:1;background:#2b6cff">Admin Panel</button>
-      <button id="logout" style="flex:1;background:#ff5555">Logout</button>
+        <button type="submit" class="btn btn-main" aria-live="polite">🚀 Kirim ke Support</button>
+      </form>
+
+      <div class="action-row" role="toolbar" aria-label="Actions">
+        <button id="gotoAdmin" class="btn btn-outline" aria-label="Admin Panel">👑 Admin Panel</button>
+        <button id="developer" class="btn btn-outline" aria-label="Developer">🛠 Developer</button>
+        <button id="logout" class="btn btn-outline" aria-label="Logout">⎋ Logout</button>
+      </div>
+
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+      <div class="meta">
+        <div class="pill">@leakvjs</div>
+      </div>
     </div>
-
-    <div class="msg" id="msg"></div>
   </div>
 
   <script>
-    document.getElementById("gotoAdmin").addEventListener("click", ()=> {
-      const role = localStorage.getItem("role");
-      if (role !== "admin") {
-        alert("Access denied — admin only");
-        return;
-      }
-      window.location.href = "/admin.html";
-    });
+    // ---------- Canvas particle + network effect ----------
+    (function(){
+      const canvas = document.getElementById('bg-canvas');
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = innerWidth;
+      let h = canvas.height = innerHeight;
+      const DPR = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = innerWidth * DPR;
+      canvas.height = innerHeight * DPR;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.scale(DPR, DPR);
 
-    document.getElementById("logout").addEventListener("click", ()=> {
-      localStorage.removeItem("loggedIn");
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      window.location.href = "/login.html";
-    });
+      const config = {
+        particleCount: Math.round(Math.max(18, (w*h) / (1200*1200) * 120)), // adapt to screen
+        maxRadius: 1.6,
+        speed: 0.25,
+        linkDistance: 140,
+        colors: {
+          dot: 'rgba(200,150,255,0.9)',
+          link: 'rgba(160,110,255,0.12)'
+        }
+      };
 
-    const form = document.getElementById("fixForm");
-    const msg = document.getElementById("msg");
-    form.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      msg.textContent = "⏳ Mengirim...";
-      const token = localStorage.getItem("token");
-      const data = { number: document.getElementById("number").value.trim() };
-      try {
-        const res = await fetch("/api/sendmail", {
-          method: "POST",
-          headers: { "Content-Type":"application/json", "Authorization":"Bearer "+token },
-          body: JSON.stringify(data)
-        });
-        const j = await res.json();
-        msg.textContent = j.message;
-        msg.style.color = j.success ? "#25d366" : "#ff5555";
-      } catch (err) {
-        msg.textContent = "❌ Terjadi kesalahan koneksi.";
-        msg.style.color = "#ff5555";
+      let particles = [];
+
+      function rand(min,max){ return Math.random()*(max-min)+min; }
+
+      function createParticles(){
+        particles = [];
+        for(let i=0;i<config.particleCount;i++){
+          particles.push({
+            x: Math.random()*w,
+            y: Math.random()*h,
+            vx: rand(-config.speed, config.speed),
+            vy: rand(-config.speed, config.speed),
+            r: Math.random()*config.maxRadius + 0.4,
+            phase: Math.random()*Math.PI*2
+          });
+        }
       }
-    });
+
+      function resize(){
+        w = canvas.width = innerWidth * DPR;
+        h = canvas.height = innerHeight * DPR;
+        canvas.style.width = innerWidth + 'px';
+        canvas.style.height = innerHeight + 'px';
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+        createParticles();
+      }
+      addEventListener('resize', resize);
+
+      let last = 0;
+      function step(ts){
+        // respects reduced motion settings
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if(reduced){ ctx.clearRect(0,0,innerWidth,innerHeight); return; }
+
+        const dt = Math.min(48, ts - last);
+        last = ts;
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+
+        // subtle background glow circles (parallax-ish)
+        // draw particles
+        for(let i=0;i<particles.length;i++){
+          const p = particles[i];
+          p.x += p.vx * (dt/16);
+          p.y += p.vy * (dt/16);
+          p.phase += 0.01 * (dt/16);
+
+          // wrap
+          if(p.x < -10) p.x = innerWidth + 10;
+          if(p.x > innerWidth + 10) p.x = -10;
+          if(p.y < -10) p.y = innerHeight + 10;
+          if(p.y > innerHeight + 10) p.y = -10;
+
+          // draw dot
+          ctx.beginPath();
+          ctx.fillStyle = config.colors.dot.replace('0.9','0.9');
+          ctx.globalAlpha = 0.85 * (0.6 + 0.4*Math.sin(p.phase));
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fill();
+        }
+
+        // links
+        ctx.beginPath();
+        for(let i=0;i<particles.length;i++){
+          for(let j=i+1;j<particles.length;j++){
+            const a = particles[i];
+            const b = particles[j];
+            const dx = a.x-b.x, dy = a.y-b.y;
+            const d = Math.sqrt(dx*dx+dy*dy);
+            if(d < config.linkDistance){
+              const alpha = (1 - d/config.linkDistance) * 0.12;
+              ctx.strokeStyle = 'rgba(160,110,255,'+ (alpha) +')';
+              ctx.lineWidth = 1;
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+            }
+          }
+        }
+        ctx.stroke();
+
+        requestAnimationFrame(step);
+      }
+
+      // init
+      resize();
+      requestAnimationFrame(step);
+    })();
+
+    // ---------- UI logic: login redirect, admin check, logout, form submit ----------
+    (function(){
+      // simple access check (same as original)
+      if (localStorage.getItem("loggedIn") !== "true") {
+        // don't auto redirect during local testing; comment next line if needed
+        window.location.href = "/login.html";
+      }
+
+      // Admin button
+      document.getElementById("gotoAdmin").addEventListener("click", ()=> {
+        const role = localStorage.getItem("role");
+        if (role !== "admin") {
+          alert("Access denied — admin only");
+          return;
+        }
+        window.location.href = "/admin.html";
+      });
+
+      // Developer button (example)
+      document.getElementById("developer").addEventListener("click", () => {
+  window.open("https://t.me/leakvjs", "_blank");
+});
+
+      // Logout
+      document.getElementById("logout").addEventListener("click", ()=> {
+        localStorage.removeItem("loggedIn");
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "/login.html";
+      });
+
+      // Form submit
+      const form = document.getElementById("fixForm");
+      const msg = document.getElementById("msg");
+      form.addEventListener("submit", async (e)=>{
+        e.preventDefault();
+        msg.style.color = "#d9c9ff";
+        msg.textContent = "⏳ Mengirim...";
+        const token = localStorage.getItem("token") || "";
+        const number = document.getElementById("number").value.trim();
+        if(!number){
+          msg.style.color = "#ffb4c6";
+          msg.textContent = "Masukkan nomor yang valid.";
+          return;
+        }
+
+        // safe request to your API endpoint (same pattern)
+        try{
+          const res = await fetch("/api/sendmail", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": token ? ("Bearer " + token) : ""
+            },
+            body: JSON.stringify({ number })
+          });
+          if(!res.ok){
+            const text = await res.text().catch(()=>null);
+            msg.style.color = "#ff8b9e";
+            msg.textContent = text || ("Server responded: " + res.status);
+            return;
+          }
+          const j = await res.json().catch(()=>({ message: "OK", success: true }));
+          msg.style.color = j.success ? "#bfe4cd" : "#ff9a9a";
+          msg.textContent = j.message || "Request sent.";
+        }catch(err){
+          msg.style.color = "#ff9a9a";
+          msg.textContent = "❌ Terjadi kesalahan koneksi.";
+          console.error(err);
+        }
+      });
+    })();
   </script>
 </body>
 </html>
